@@ -1,0 +1,127 @@
+{
+    "scripts": [
+      {
+        "type": "Prompt",
+        "requiresPrompt": true,
+        "id": "/Users/a.lacoin/.kenv/scripts/achille-script.js",
+        "command": "achille-script",
+        "filePath": "/Users/a.lacoin/.kenv/scripts/achille-script.js",
+        "kenv": "",
+        "icon": "",
+        "name": "achille-script"
+      },
+      {
+        "menu": "Browse scriptkit.com",
+        "description": "Launch scriptkit.com in your browser",
+        "author": "John Lindquist",
+        "twitter": "@johnlindquist",
+        "note": "Feel free to delete this script!",
+        "type": "Prompt",
+        "id": "/Users/a.lacoin/.kenv/scripts/browse-scriptkit.js",
+        "command": "browse-scriptkit",
+        "filePath": "/Users/a.lacoin/.kenv/scripts/browse-scriptkit.js",
+        "kenv": "",
+        "icon": "",
+        "name": "Browse scriptkit.com"
+      },
+      {
+        "exclude": true,
+        "shortcut": "Control+Alt+V",
+        "friendlyShortcut": "ctrl+opt+v",
+        "type": "Prompt",
+        "requiresPrompt": true,
+        "id": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/clipboard-history.js",
+        "command": "clipboard-history",
+        "filePath": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/clipboard-history.js",
+        "kenv": "examples",
+        "icon": "",
+        "name": "clipboard-history"
+      },
+      {
+        "menu": "Dad Joke",
+        "description": "Dad Joke from icanhazdadjoke.com",
+        "author": "John Lindquist",
+        "twitter": "@johnlindquist",
+        "type": "Prompt",
+        "id": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/dad-joke.js",
+        "command": "dad-joke",
+        "filePath": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/dad-joke.js",
+        "kenv": "examples",
+        "icon": "",
+        "name": "Dad Joke"
+      },
+      {
+        "menu": "Resize an Image",
+        "description": "Select an image in Finder before running this",
+        "author": "John Lindquist",
+        "twitter": "@johnlindquist",
+        "type": "Prompt",
+        "requiresPrompt": true,
+        "id": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/resize-image.js",
+        "command": "resize-image",
+        "filePath": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/resize-image.js",
+        "kenv": "examples",
+        "icon": "",
+        "name": "Resize an Image"
+      },
+      {
+        "menu": "Run the Tutorial",
+        "description": "Learn the basics of using Script Kit",
+        "author": "John Lindquist",
+        "twitter": "@johnlindquist",
+        "type": "Prompt",
+        "id": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/run-tutorial.js",
+        "command": "run-tutorial",
+        "filePath": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/run-tutorial.js",
+        "kenv": "examples",
+        "icon": "",
+        "name": "Run the Tutorial"
+      },
+      {
+        "menu": "Todos \"App\"",
+        "description": "Create/read/update/delete db example",
+        "author": "John Lindquist",
+        "twitter": "@johnlindquist",
+        "type": "Prompt",
+        "tabs": [
+          "Add",
+          "Toggle",
+          "Remove"
+        ],
+        "requiresPrompt": true,
+        "id": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/todos.js",
+        "command": "todos",
+        "filePath": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/todos.js",
+        "kenv": "examples",
+        "icon": "",
+        "name": "Todos \"App\""
+      },
+      {
+        "menu": "Toggle Dark Mode",
+        "description": "Switches osx between light/dark modes",
+        "author": "John Lindquist",
+        "twitter": "@johnlindquist",
+        "type": "Prompt",
+        "id": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/toggle-dark-mode.js",
+        "command": "toggle-dark-mode",
+        "filePath": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/toggle-dark-mode.js",
+        "kenv": "examples",
+        "icon": "",
+        "name": "Toggle Dark Mode"
+      },
+      {
+        "menu": "Word API",
+        "description": "Queries a word api library",
+        "author": "John Lindquist",
+        "twitter": "@johnlindquist",
+        "type": "Prompt",
+        "requiresPrompt": true,
+        "id": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/word-api.js",
+        "command": "word-api",
+        "filePath": "/Users/a.lacoin/.kenv/kenvs/examples/scripts/word-api.js",
+        "kenv": "examples",
+        "icon": "",
+        "name": "Word API"
+      }
+    ]
+  }
