@@ -1,0 +1,61 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "lazy",
+  "title": "Lazy: Quickly Build Raycast Commands",
+  "description": "Raycast Lazycli Integration",
+  "icon": "command-icon.png",
+  "author": "pomdtr",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "list-commands",
+      "title": "List Commands",
+      "subtitle": "Lazy",
+      "description": "List Available Lazy Commands",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "lazy-dir",
+      "description": "Directory containing all your lazy configs",
+      "type": "textfield",
+      "default": "~/.config/lazy",
+      "title": "Config Directory",
+      "required": true
+    },
+    {
+      "name": "lazy-path",
+      "description": "",
+      "type": "textfield",
+      "default": "/bin:/usr/bin:/usr/local/bin:/opt/homebrew",
+      "title": "PATH Variable",
+      "required": true
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.25.6",
+    "execa": "^6.0.0",
+    "globby": "^12.0.2",
+    "jsonschema": "^1.4.0",
+    "nunjucks": "^3.2.3",
+    "which": "^2.0.2",
+    "yaml": "^1.10.2"
+  },
+  "devDependencies": {
+    "@types/node": "~16.10.0",
+    "@types/react": "^17.0.28",
+    "@types/which": "^2.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "react-devtools": "^4.19.2",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "generate-schema": "typescript-json-schema src/lazy.ts Lazy.Config --required --strictNullChecks --noExtraProps --out assets/schema.json"
+  }
+}

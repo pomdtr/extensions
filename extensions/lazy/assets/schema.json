@@ -1,0 +1,578 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "Lazy.CheckBox": {
+            "additionalProperties": false,
+            "properties": {
+                "default": {
+                    "type": "boolean"
+                },
+                "dest": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "checkbox"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dest",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.Command": {
+            "additionalProperties": false,
+            "properties": {
+                "command": {
+                    "type": "string"
+                },
+                "shell": {
+                    "type": "string"
+                },
+                "skip_lines": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "command"
+            ],
+            "type": "object"
+        },
+        "Lazy.CommandAction": {
+            "additionalProperties": false,
+            "properties": {
+                "command": {
+                    "type": "string"
+                },
+                "confirm": {
+                    "type": "boolean"
+                },
+                "match": {
+                    "type": "string"
+                },
+                "shell": {
+                    "type": "string"
+                },
+                "skip_lines": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "command"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "command",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.Conditional": {
+            "additionalProperties": false,
+            "properties": {
+                "condition": {
+                    "type": "string"
+                },
+                "failure": {
+                    "$ref": "#/definitions/Lazy.StepAction"
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/Lazy.StepParams"
+                },
+                "success": {
+                    "$ref": "#/definitions/Lazy.StepAction"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "if"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "condition",
+                "failure",
+                "success",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.DropDown": {
+            "additionalProperties": false,
+            "properties": {
+                "default": {
+                    "type": "string"
+                },
+                "dest": {
+                    "type": "string"
+                },
+                "items": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "dropdown"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dest",
+                "items",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.DynamicItems": {
+            "additionalProperties": false,
+            "properties": {
+                "accessoryTitle": {
+                    "type": "string"
+                },
+                "actions": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Lazy.CommandAction"
+                            },
+                            {
+                                "$ref": "#/definitions/Lazy.StepAction"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "delimiter": {
+                    "type": "string"
+                },
+                "generator": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Lazy.Command"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "generator"
+            ],
+            "type": "object"
+        },
+        "Lazy.FilterList": {
+            "additionalProperties": false,
+            "properties": {
+                "items": {
+                    "$ref": "#/definitions/Lazy.DynamicItems"
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/Lazy.StepParams"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "filter"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "items",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.Form": {
+            "additionalProperties": false,
+            "properties": {
+                "fields": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Lazy.CheckBox"
+                            },
+                            {
+                                "$ref": "#/definitions/Lazy.DropDown"
+                            },
+                            {
+                                "$ref": "#/definitions/Lazy.TextField"
+                            },
+                            {
+                                "$ref": "#/definitions/Lazy.TextArea"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "onSubmit": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Lazy.CommandAction"
+                        },
+                        {
+                            "$ref": "#/definitions/Lazy.StepAction"
+                        }
+                    ]
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/Lazy.StepParams"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "form"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "fields",
+                "onSubmit",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.Preview": {
+            "additionalProperties": false,
+            "properties": {
+                "actions": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Lazy.CommandAction"
+                            },
+                            {
+                                "$ref": "#/definitions/Lazy.StepAction"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "command": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Lazy.Command"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "markdown": {
+                    "type": "boolean"
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/Lazy.StepParams"
+                },
+                "shell": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "preview"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "command",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.QueryList": {
+            "additionalProperties": false,
+            "properties": {
+                "items": {
+                    "$ref": "#/definitions/Lazy.DynamicItems"
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/Lazy.StepParams"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "query"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "items",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.StaticItem": {
+            "additionalProperties": false,
+            "properties": {
+                "accessoryTitle": {
+                    "type": "string"
+                },
+                "actions": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Lazy.CommandAction"
+                            },
+                            {
+                                "$ref": "#/definitions/Lazy.StepAction"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title"
+            ],
+            "type": "object"
+        },
+        "Lazy.StaticList": {
+            "additionalProperties": false,
+            "properties": {
+                "items": {
+                    "items": {
+                        "$ref": "#/definitions/Lazy.StaticItem"
+                    },
+                    "type": "array"
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/Lazy.StepParams"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "static"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "items",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.StepAction": {
+            "additionalProperties": false,
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "match": {
+                    "type": "string"
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/Lazy.StepParams"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "step"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "target",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.StepParams": {
+            "additionalProperties": {},
+            "type": "object"
+        },
+        "Lazy.TextArea": {
+            "additionalProperties": false,
+            "properties": {
+                "default": {
+                    "type": "string"
+                },
+                "dest": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "textarea"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dest",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Lazy.TextField": {
+            "additionalProperties": false,
+            "properties": {
+                "default": {
+                    "type": "string"
+                },
+                "dest": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "textfield"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dest",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "aliases": {
+            "items": {},
+            "type": "array"
+        },
+        "icon": {
+            "type": "string"
+        },
+        "params": {
+            "$ref": "#/definitions/Lazy.StepParams"
+        },
+        "requirements": {
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        },
+        "roots": {
+            "items": {
+                "$ref": "#/definitions/Lazy.StaticItem"
+            },
+            "type": "array"
+        },
+        "schemaVersion": {
+            "enum": [
+                "v1"
+            ],
+            "type": "string"
+        },
+        "steps": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/definitions/Lazy.Conditional"
+                    },
+                    {
+                        "$ref": "#/definitions/Lazy.QueryList"
+                    },
+                    {
+                        "$ref": "#/definitions/Lazy.FilterList"
+                    },
+                    {
+                        "$ref": "#/definitions/Lazy.StaticList"
+                    },
+                    {
+                        "$ref": "#/definitions/Lazy.Preview"
+                    },
+                    {
+                        "$ref": "#/definitions/Lazy.Form"
+                    }
+                ]
+            },
+            "type": "object"
+        }
+    },
+    "required": [
+        "steps"
+    ],
+    "type": "object"
+}
+
