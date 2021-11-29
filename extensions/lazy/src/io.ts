@@ -1,7 +1,7 @@
 import { readFile } from "fs/promises";
 import { globby } from "globby";
 import { validate } from "jsonschema";
-import { parse, resolve } from "path";
+import { resolve } from "path";
 import which from "which";
 import yaml from "yaml";
 import { Lazy } from "./lazy";
@@ -9,8 +9,8 @@ import { Lazy } from "./lazy";
 export async function loadConfigs(configDir: string) {
   const globs = await globby(`**/**.yaml`, { cwd: configDir });
   const loadConfig = (path: string) => readFile(path, "utf-8").then((content) => yaml.parse(content) as Lazy.Config);
-  const configs: { glob: string; config: Lazy.Config }[] = await Promise.all(
-    globs.map((glob) => loadConfig(resolve(configDir, glob)).then((config) => ({ glob, config })))
+  const configs = await Promise.all(
+    globs.map((glob) => loadConfig(resolve(configDir, glob)))
   );
   return configs;
 }
@@ -23,21 +23,20 @@ export async function validateConfigs(configs: Lazy.Config[], schemaPath: string
 }
 
 const packages: Lazy.Packages = {};
-export function parseConfigs(configs: { glob: string; config: Lazy.Config }[]) {
+export function parseConfigs(configs: Lazy.Config[]) {
   const roots: Lazy.Roots = {};
-  for (const { glob, config } of configs) {
-    const parsed = parse(glob);
-    const packageName = parsed.dir ? `${parsed.dir}/${parsed.name}` : parsed.name;
-    packages[packageName] = {};
+  for (const config of configs) {
+    const packageName = config.packageName
+    packages[packageName] = {steps: {}, prefs: config.prefs || {}};
     for (const requirement of config.requirements || []) {
       which.sync(requirement);
     }
 
     for (const [step_id, step] of Object.entries(config.steps || {})) {
-      packages[packageName][step_id] = {
+      packages[packageName].steps[step_id] = {
         ...config.steps[step_id],
         packageName: packageName,
-        params: { ...config.params, ...step.params },
+        params: { ...config.prefs, ...step.params },
       };
     }
 
@@ -53,12 +52,13 @@ export function GetStep(reference: Lazy.StepAction | string, packageName: string
   const targetPackageName = typeof reference == "string" ? packageName : reference.packageName || packageName;
   const targetPackage = packages[targetPackageName];
   if (!targetPackage) {
-    return {command: `echo 'Package ${packageName} does not exist!'`, type: "preview", title: "Unknown Step"}
+    return {content: `Package \`${packageName}\` does not exist!`, type: "preview", title: "Unknown Step", markdown: true, packageName: "error", prefs: {}}
   }
-  const next = targetPackage[target];
-  if (!next) {
-    return {command: `echo 'Step ${target} does not exist in package ${packageName}'`, type: "preview", title: "Unknown Step"}
+  const step = targetPackage.steps[target];
+  const prefs = targetPackage.prefs
+  if (!step) {
+    return {content: `Step \`${target}\` does not exist in package \`${packageName}\``, type: "preview", title: "Unknown Step", markdown: true, packageName: "error", prefs: {}}
   }
-  return next;
-}
 
+  return {...step, prefs};
+}

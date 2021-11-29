@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace Lazy {
   export interface Config {
-    schemaVersion?: "v1";
     requirements?: string[];
-    aliases?: unknown[];
+    packageName: string;
     icon?: string;
-    params?: StepParams;
+    prefs?: StepEnv;
     steps: {
       [step_id: string]: Step;
     };
@@ -13,17 +12,17 @@ export namespace Lazy {
   }
 
   export interface BaseStep {
-    type: "if" | "query" | "filter" | "static" | "form" | "preview";
+    type: "query" | "filter" | "static" | "form" | "preview";
     title: string;
-    packageName?: string;
-    params?: StepParams;
-  }
-
-  export interface Conditional extends BaseStep {
-    type: "if";
-    condition: string;
-    success: StepAction;
-    failure: StepAction;
+    /**
+     * @ignore
+     */
+    packageName: string;
+    /**
+     * @ignore
+     */
+    prefs: StepEnv;
+    params?: StepEnv;
   }
 
   export interface DynamicList extends BaseStep {
@@ -46,7 +45,7 @@ export namespace Lazy {
   export interface Item {
     title?: string;
     subtitle?: string;
-    accessoryTitle?: string;
+    preview?: string;
   }
 
   export interface DynamicItems extends Item {
@@ -63,12 +62,12 @@ export namespace Lazy {
   export interface Preview extends BaseStep {
     type: "preview";
     shell?: string;
-    command: string | Command;
+    content: string | Command;
     markdown?: boolean;
     actions?: Action[];
   }
 
-  export type Step = StaticList | FilterList | QueryList | Preview | Form | Conditional;
+  export type Step = StaticList | FilterList | QueryList | Preview | Form;
 
   export interface Command {
     command: string;
@@ -76,29 +75,36 @@ export namespace Lazy {
     shell?: string;
   }
 
-  export interface CommandAction extends Command {
-    type: "command"
-    title: string;
-    confirm?: boolean;
-    match?: string;
+  interface BaseAction {
+    condition?: string
+    shortcut?: string;
   }
 
-  export interface StepAction {
+  export interface CommandAction extends Command, BaseAction {
+    type: "command"
+    title: string;
+    reloadOnSuccess?: string;
+    confirm?: boolean;
+  }
+
+  export interface StepAction extends BaseAction {
     type: "step"
     alias?: string;
     packageName?: string;
-    match?: string;
     target: string;
-    params?: StepParams;
+    params?: StepEnv;
   }
 
   export type Action = CommandAction | StepAction
 
   export interface Packages {
-    [packageName: string]: { [stepId: string]: Step & {packageName: string, params: Lazy.StepParams} };
+    [packageName: string]: {
+      steps: { [stepId: string]: Step },
+      prefs: StepEnv
+    };
   }
 
-  export interface StepParams {
+  export interface StepEnv {
     [key: string]: unknown;
   }
 
@@ -106,7 +112,7 @@ export namespace Lazy {
     fields: Field[];
     type: "form";
 
-    onSubmit: Action;
+    action: Action;
   }
 
   export interface BaseField {

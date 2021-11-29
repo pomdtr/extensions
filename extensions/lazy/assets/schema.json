@@ -52,13 +52,19 @@
                 "command": {
                     "type": "string"
                 },
+                "condition": {
+                    "type": "string"
+                },
                 "confirm": {
                     "type": "boolean"
                 },
-                "match": {
+                "reloadOnSuccess": {
                     "type": "string"
                 },
                 "shell": {
+                    "type": "string"
+                },
+                "shortcut": {
                     "type": "string"
                 },
                 "skip_lines": {
@@ -76,43 +82,6 @@
             },
             "required": [
                 "command",
-                "title",
-                "type"
-            ],
-            "type": "object"
-        },
-        "Lazy.Conditional": {
-            "additionalProperties": false,
-            "properties": {
-                "condition": {
-                    "type": "string"
-                },
-                "failure": {
-                    "$ref": "#/definitions/Lazy.StepAction"
-                },
-                "packageName": {
-                    "type": "string"
-                },
-                "params": {
-                    "$ref": "#/definitions/Lazy.StepParams"
-                },
-                "success": {
-                    "$ref": "#/definitions/Lazy.StepAction"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "enum": [
-                        "if"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "condition",
-                "failure",
-                "success",
                 "title",
                 "type"
             ],
@@ -154,9 +123,6 @@
         "Lazy.DynamicItems": {
             "additionalProperties": false,
             "properties": {
-                "accessoryTitle": {
-                    "type": "string"
-                },
                 "actions": {
                     "items": {
                         "anyOf": [
@@ -201,11 +167,8 @@
                 "items": {
                     "$ref": "#/definitions/Lazy.DynamicItems"
                 },
-                "packageName": {
-                    "type": "string"
-                },
                 "params": {
-                    "$ref": "#/definitions/Lazy.StepParams"
+                    "$ref": "#/definitions/Lazy.StepEnv"
                 },
                 "title": {
                     "type": "string"
@@ -227,6 +190,16 @@
         "Lazy.Form": {
             "additionalProperties": false,
             "properties": {
+                "action": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Lazy.CommandAction"
+                        },
+                        {
+                            "$ref": "#/definitions/Lazy.StepAction"
+                        }
+                    ]
+                },
                 "fields": {
                     "items": {
                         "anyOf": [
@@ -246,21 +219,8 @@
                     },
                     "type": "array"
                 },
-                "onSubmit": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/Lazy.CommandAction"
-                        },
-                        {
-                            "$ref": "#/definitions/Lazy.StepAction"
-                        }
-                    ]
-                },
-                "packageName": {
-                    "type": "string"
-                },
                 "params": {
-                    "$ref": "#/definitions/Lazy.StepParams"
+                    "$ref": "#/definitions/Lazy.StepEnv"
                 },
                 "title": {
                     "type": "string"
@@ -273,8 +233,8 @@
                 }
             },
             "required": [
+                "action",
                 "fields",
-                "onSubmit",
                 "title",
                 "type"
             ],
@@ -296,7 +256,7 @@
                     },
                     "type": "array"
                 },
-                "command": {
+                "content": {
                     "anyOf": [
                         {
                             "$ref": "#/definitions/Lazy.Command"
@@ -309,11 +269,8 @@
                 "markdown": {
                     "type": "boolean"
                 },
-                "packageName": {
-                    "type": "string"
-                },
                 "params": {
-                    "$ref": "#/definitions/Lazy.StepParams"
+                    "$ref": "#/definitions/Lazy.StepEnv"
                 },
                 "shell": {
                     "type": "string"
@@ -329,7 +286,7 @@
                 }
             },
             "required": [
-                "command",
+                "content",
                 "title",
                 "type"
             ],
@@ -341,11 +298,8 @@
                 "items": {
                     "$ref": "#/definitions/Lazy.DynamicItems"
                 },
-                "packageName": {
-                    "type": "string"
-                },
                 "params": {
-                    "$ref": "#/definitions/Lazy.StepParams"
+                    "$ref": "#/definitions/Lazy.StepEnv"
                 },
                 "title": {
                     "type": "string"
@@ -367,9 +321,6 @@
         "Lazy.StaticItem": {
             "additionalProperties": false,
             "properties": {
-                "accessoryTitle": {
-                    "type": "string"
-                },
                 "actions": {
                     "items": {
                         "anyOf": [
@@ -404,11 +355,8 @@
                     },
                     "type": "array"
                 },
-                "packageName": {
-                    "type": "string"
-                },
                 "params": {
-                    "$ref": "#/definitions/Lazy.StepParams"
+                    "$ref": "#/definitions/Lazy.StepEnv"
                 },
                 "title": {
                     "type": "string"
@@ -433,14 +381,17 @@
                 "alias": {
                     "type": "string"
                 },
-                "match": {
+                "condition": {
                     "type": "string"
                 },
                 "packageName": {
                     "type": "string"
                 },
                 "params": {
-                    "$ref": "#/definitions/Lazy.StepParams"
+                    "$ref": "#/definitions/Lazy.StepEnv"
+                },
+                "shortcut": {
+                    "type": "string"
                 },
                 "target": {
                     "type": "string"
@@ -458,7 +409,7 @@
             ],
             "type": "object"
         },
-        "Lazy.StepParams": {
+        "Lazy.StepEnv": {
             "additionalProperties": {},
             "type": "object"
         },
@@ -516,15 +467,14 @@
         }
     },
     "properties": {
-        "aliases": {
-            "items": {},
-            "type": "array"
-        },
         "icon": {
             "type": "string"
         },
-        "params": {
-            "$ref": "#/definitions/Lazy.StepParams"
+        "packageName": {
+            "type": "string"
+        },
+        "prefs": {
+            "$ref": "#/definitions/Lazy.StepEnv"
         },
         "requirements": {
             "items": {
@@ -538,18 +488,9 @@
             },
             "type": "array"
         },
-        "schemaVersion": {
-            "enum": [
-                "v1"
-            ],
-            "type": "string"
-        },
         "steps": {
             "additionalProperties": {
                 "anyOf": [
-                    {
-                        "$ref": "#/definitions/Lazy.Conditional"
-                    },
                     {
                         "$ref": "#/definitions/Lazy.QueryList"
                     },
@@ -571,6 +512,7 @@
         }
     },
     "required": [
+        "packageName",
         "steps"
     ],
     "type": "object"

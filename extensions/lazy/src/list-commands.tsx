@@ -13,7 +13,7 @@ const SCHEMA_PATH = resolve(environment.assetsPath, "schema.json");
 async function main() {
   const configs = await loadConfigs(CONFIG_DIR);
   validateConfigs(
-    configs.map((config) => config.config),
+    configs,
     SCHEMA_PATH
   );
   const roots = parseConfigs(configs);

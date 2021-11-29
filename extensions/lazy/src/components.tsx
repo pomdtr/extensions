@@ -7,8 +7,8 @@ import {
   Form,
   Icon,
   ImageLike,
+  KeyEquivalent,
   List,
-  OpenWithAction,
   PushAction,
   showHUD,
   showToast,
@@ -16,9 +16,8 @@ import {
   ToastStyle,
   useNavigation
 } from "@raycast/api";
-import { execaCommand, execaCommandSync } from "execa";
+import { execaCommand } from "execa";
 import { homedir } from "os";
-import { resolve } from "path";
 import { useEffect, useState } from "react";
 import { GetStep } from "./io";
 import { Lazy } from "./lazy";
@@ -35,13 +34,14 @@ export function RootCommands(props: { roots: Lazy.Roots; configDir: string }): J
               key={item.title}
               packageName={packageName}
               icon={root.icon ? { source: root.icon } : Icon.Terminal}
-              additionalAction={
-                <OpenWithAction
-                  shortcut={{ modifiers: ["cmd"], key: "o" }}
-                  key={packageName}
-                  path={resolve(props.configDir, `${packageName}.yaml`)}
-                />
-              }
+              keywords={[packageName]}
+              // additionalAction={
+              //   <OpenWithAction
+              //     shortcut={{ modifiers: ["cmd"], key: "o" }}
+              //     key={packageName}
+              //     path={resolve(props.configDir, `${packageName}.yaml`)}
+              //   />
+              // }
             />
           ))}
         </List.Section>
@@ -52,19 +52,24 @@ export function RootCommands(props: { roots: Lazy.Roots; configDir: string }): J
 
 function PreviewStep(props: { step: Lazy.Preview }) {
   const step = props.step;
+  const { params, prefs } = step;
   const codeblock = (text: string) => "```\n" + text + "\n```";
-  const command = typeof step.command == "string" ? { command: step.command } : step.command;
   const [text, setText] = useState<string>();
   useEffect(() => {
-    execCommand(renderString(command.command, { params: step.params }), command.shell).then((res) =>
-      setText(res.stdout)
-    );
+    if (typeof step.content == "string") {
+      setText(renderString(step.content, { params, prefs }));
+    } else {
+      const { command, shell } = step.content;
+      execCommand(renderString(command, { params, prefs }), shell).then((res) =>
+        setText(step.markdown ? res.stdout : codeblock(res.stdout))
+      );
+    }
   }, [step.params]);
 
   return (
     <Detail
       navigationTitle={step.title}
-      markdown={text ? codeblock(text) : undefined}
+      markdown={text}
       isLoading={typeof text === "undefined"}
       actions={
         <ActionPanel>
@@ -72,15 +77,15 @@ function PreviewStep(props: { step: Lazy.Preview }) {
             if (action.type == "step")
               return (
                 <StepAction
-                  stepReference={{ ...action, params: renderObj(action.params || {}, { params: step.params }) }}
-                  packageName={step.packageName!}
+                  stepAction={{ ...action, params: renderObj(action.params || {}, { params, prefs }) }}
+                  packageName={step.packageName}
                   key={index}
                 />
               );
             return (
               <CommandAction
                 key={action.title || action.command}
-                action={{ ...action, command: renderString(action.command, { paramsparams: step.params }) }}
+                action={{ ...action, command: renderString(action.command, { params, prefs }) }}
               />
             );
           })}
@@ -93,11 +98,12 @@ function PreviewStep(props: { step: Lazy.Preview }) {
 
 function FormStep(props: { step: Lazy.Form }) {
   const { step } = props;
-  const action = step.onSubmit;
+  const { params, prefs } = step;
+  const action = step.action;
   const navigation = useNavigation();
 
   function FormAction(props: { action: Lazy.Action }) {
-    const action = props.action
+    const action = props.action;
     if (action.type == "step") {
       const next = GetStep(action, step.packageName!);
       return (
@@ -105,7 +111,7 @@ function FormStep(props: { step: Lazy.Form }) {
           title={action.alias || next.title}
           onSubmit={(values: Record<string, unknown>) => {
             const next = GetStep(action, step.packageName!);
-            const refParams = renderObj(action.params || {}, { form: values, params: step.params });
+            const refParams = renderObj(action.params || {}, { form: values, params, prefs });
             navigation.push(<Step step={{ ...next, params: { ...next.params, ...refParams } }} />);
           }}
         />
@@ -117,8 +123,8 @@ function FormStep(props: { step: Lazy.Form }) {
         icon={Icon.Checkmark}
         onSubmit={(formValues: Record<string, unknown>) =>
           runCommand({
-            ...step.onSubmit,
-            command: renderString(action.command, { params: { ...step.params, ...formValues } }),
+            ...step.action,
+            command: renderString(action.command, { params, form: formValues, prefs }),
           })
         }
       />
@@ -165,7 +171,7 @@ function StaticStep(props: { step: Lazy.StaticList }) {
   return (
     <List navigationTitle={step.title}>
       {step.items.map((item) => (
-        <StaticItem item={item} packageName={step.packageName!} params={step.params} />
+        <StaticItem item={item} packageName={step.packageName!} env={step.params} />
       ))}
     </List>
   );
@@ -175,25 +181,25 @@ export function StaticItem(props: {
   item: Lazy.StaticItem;
   packageName: string;
   icon?: ImageLike;
-  params?: Lazy.StepParams;
-  additionalAction?: JSX.Element;
+  keywords?: string[];
+  env?: Lazy.StepEnv;
 }) {
-  const { item, packageName, params = {}, icon = Icon.Dot, additionalAction: action } = props;
+  const { item, packageName, keywords, env = {}, icon = Icon.Dot } = props;
   return (
     <List.Item
       title={item.title}
       subtitle={item.subtitle}
-      accessoryTitle={item.accessoryTitle}
       icon={icon}
+      keywords={keywords}
       key={item.title}
       actions={
         <ActionPanel>
           {item.actions?.map((action, index) => {
             if (action.type == "step") {
-              const refEnv = renderObj({ ...action.params }, params);
+              const refEnv = renderObj({ ...action.params }, env);
               return (
                 <StepAction
-                  stepReference={{
+                  stepAction={{
                     ...action,
                     params: refEnv,
                   }}
@@ -206,11 +212,10 @@ export function StaticItem(props: {
             return (
               <CommandAction
                 key={action.title || action.command}
-                action={{ ...action, command: renderString(action.command, { params }) }}
+                action={{ ...action, command: renderString(action.command, env) }}
               />
             );
           })}
-          {action}
         </ActionPanel>
       }
     />
@@ -239,6 +244,7 @@ function QueryStep(props: { step: Lazy.QueryList }) {
 
 function ListStep(props: { step: Lazy.FilterList; onSearchTextChange?: (query: string) => void }) {
   const { step, onSearchTextChange } = props;
+  const { prefs, params } = props.step;
   const generator = typeof step.items.generator == "string" ? { command: step.items.generator } : step.items.generator;
   const [state, setState] = useState<{ lines: string[]; isLoading: boolean }>({ lines: [], isLoading: true });
   let shouldUpdate = true;
@@ -247,13 +253,13 @@ function ListStep(props: { step: Lazy.FilterList; onSearchTextChange?: (query: s
     try {
       return JSON.parse(line);
     } catch (e) {
-      return {};
+      return null;
     }
   };
 
   const fetchLines = () => {
     setState({ ...state, isLoading: true });
-    return execCommand(renderString(generator.command, { params: step.params }), generator.shell)
+    return execCommand(renderString(generator.command, { params, prefs }), generator.shell)
       .then((res) => res.stdout.split("\n"))
       .then((lines) => lines.filter((line) => line));
   };
@@ -271,22 +277,21 @@ function ListStep(props: { step: Lazy.FilterList; onSearchTextChange?: (query: s
     <List navigationTitle={step.title} isLoading={state.isLoading} onSearchTextChange={onSearchTextChange}>
       {state.lines.map((line, index) => {
         const words = line.split(step.items.delimiter || /\s+/);
-        const lineEnv = { params: step.params, words, json: lineToJson(line), line };
+        const lineEnv = { params, prefs, words, json: lineToJson(line), line };
         return (
           <List.Item
             icon={Icon.Dot}
             key={index}
             title={step.items.title ? renderString(step.items.title, lineEnv) : line}
             subtitle={step.items.subtitle ? renderString(step.items.subtitle, lineEnv) : undefined}
-            accessoryTitle={step.items.accessoryTitle ? renderString(step.items.accessoryTitle, lineEnv) : undefined}
             actions={
               <ActionPanel>
                 {step.items.actions?.map((action, index) => {
-                  if (action.match && !new RegExp(action.match).test(line)) return null;
+                  if (action.condition && renderString(action.condition, lineEnv) == "false") return null;
                   if (action.type == "step")
                     return (
                       <StepAction
-                        stepReference={{ ...action, params: renderObj({ ...action.params }, lineEnv) }}
+                        stepAction={{ ...action, params: renderObj({ ...action.params }, lineEnv) }}
                         packageName={step.packageName!}
                         key={index}
                       />
@@ -313,28 +318,23 @@ function ListStep(props: { step: Lazy.FilterList; onSearchTextChange?: (query: s
   );
 }
 
-function ConditionalStep(props: { step: Lazy.Conditional }) {
-  const step = props.step;
-  try {
-    execaCommandSync(step.condition);
-    const next = GetStep(step.success, step.packageName!);
-    return <Step step={next} />;
-  } catch (e) {
-    const next = GetStep(step.failure, step.packageName!);
-    return <Step step={next} />;
-  }
-}
-
-function StepAction(props: { stepReference: Lazy.StepAction; packageName: string }) {
-  const { stepReference, packageName } = props;
-  const next = GetStep(stepReference, packageName);
+function StepAction(props: { stepAction: Lazy.StepAction; packageName: string }) {
+  const { stepAction, packageName } = props;
+  const next = GetStep(stepAction, packageName);
   const step = {
     ...next,
-    title: stepReference.alias || next.title,
-    params: { ...next.params, ...stepReference.params },
+    title: stepAction.alias || next.title,
+    params: { ...next.params, ...stepAction.params },
   };
 
-  return <PushAction icon={Icon.ArrowRight} title={stepReference.alias || step.title} target={<Step step={step} />} />;
+  return (
+    <PushAction
+      icon={Icon.ArrowRight}
+      shortcut={stepAction.shortcut ? { modifiers: ["ctrl"], key: stepAction.shortcut as KeyEquivalent } : undefined}
+      title={stepAction.alias || step.title}
+      target={<Step step={step} />}
+    />
+  );
 }
 
 function Step(props: { step: Lazy.Step }) {
@@ -351,13 +351,10 @@ function Step(props: { step: Lazy.Step }) {
       return <PreviewStep step={step} />;
     case "form":
       return <FormStep step={step} />;
-    case "if":
-      return <ConditionalStep step={step} />;
   }
 }
 
 async function runCommand(command: Lazy.Command) {
-  console.debug(command);
   const { stdout } = await execCommand(command.command, command.shell);
   if (stdout) await showHUD(stdout);
   else closeMainWindow();
@@ -379,6 +376,7 @@ function CommandAction(props: { action: Lazy.CommandAction; refresh?: () => void
       <PushAction
         title={action.title || action.command}
         icon={Icon.Hammer}
+        shortcut={action.shortcut ? { modifiers: ["ctrl"], key: action.shortcut as KeyEquivalent } : undefined}
         target={
           <ConfirmAction
             markdown={`> ⚠️ You're about to run the command **${action.command}**.  \n> Confirm?`}
@@ -388,7 +386,12 @@ function CommandAction(props: { action: Lazy.CommandAction; refresh?: () => void
       />
     );
   return (
-    <ActionPanel.Item title={action.title || action.command} icon={Icon.Hammer} onAction={() => runCommand(action)} />
+    <ActionPanel.Item
+      title={action.title || action.command}
+      icon={Icon.Hammer}
+      shortcut={action.shortcut ? { modifiers: ["ctrl"], key: action.shortcut as KeyEquivalent } : undefined}
+      onAction={() => runCommand(action)}
+    />
   );
 }
 
