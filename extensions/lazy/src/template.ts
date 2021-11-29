@@ -1,4 +1,5 @@
 import nunjucks from "nunjucks";
+import { Lazy } from "./lazy";
 
 export function renderObj(templatedObject: object, params: Record<string, unknown>) {
   return Object.fromEntries(
@@ -18,4 +19,10 @@ export function renderString(template: string, params: Record<string, unknown>) 
   } catch(error) {
     throw Error(JSON.stringify({template, params, error}))
   }
+}
+
+export function renderAction(action: Lazy.Action, templateParams: Record<string, unknown>) {
+  if (action.type == 'command')
+    return renderObj(action, templateParams)
+  return {...renderObj(action, templateParams), params: renderObj(action.params || {}, templateParams)}
 }

@@ -26,6 +26,7 @@ export namespace Lazy {
   }
 
   export interface DynamicList extends BaseStep {
+    type: "filter" | "query"
     items: DynamicItems;
   }
 

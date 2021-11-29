@@ -21,7 +21,7 @@ import { homedir } from "os";
 import { useEffect, useState } from "react";
 import { GetStep } from "./io";
 import { Lazy } from "./lazy";
-import { renderObj, renderString } from "./template";
+import { renderAction, renderObj, renderString } from "./template";
 
 export function RootCommands(props: { roots: Lazy.Roots; configDir: string }): JSX.Element {
   return (
@@ -225,24 +225,23 @@ export function StaticItem(props: {
 function QueryStep(props: { step: Lazy.QueryList }) {
   const step = props.step;
   const [query, setQuery] = useState<string>("");
+  const templateParams = { QUERY: query };
+  const items = renderObj(step.items, templateParams);
   const generator =
     typeof step.items.generator == "string"
-      ? renderString(step.items.generator, { QUERY: query })
-      : renderString(step.items.generator.command, { QUERY: query });
+      ? renderString(step.items.generator, templateParams)
+      : renderObj(step.items.generator, templateParams);
+  const actions = step.items.actions?.map((action) => renderAction(action, templateParams));
 
   return (
     <ListStep
-      step={{
-        ...step,
-        type: "filter",
-        items: { ...step.items, generator },
-      }}
+      step={{ ...step, items: { ...items, generator: generator, actions: actions } } as Lazy.DynamicList}
       onSearchTextChange={setQuery}
     />
   );
 }
 
-function ListStep(props: { step: Lazy.FilterList; onSearchTextChange?: (query: string) => void }) {
+function ListStep(props: { step: Lazy.DynamicList; onSearchTextChange?: (query: string) => void }) {
   const { step, onSearchTextChange } = props;
   const { prefs, params } = props.step;
   const generator = typeof step.items.generator == "string" ? { command: step.items.generator } : step.items.generator;
