@@ -1,23 +1,53 @@
-import { environment, getPreferenceValues, render } from "@raycast/api";
+import { ActionPanel, environment, getPreferenceValues, Icon, List, PushAction } from "@raycast/api";
 import { homedir } from "os";
 import { resolve } from "path";
-import { RootCommands } from "./components";
-import { loadConfigs, parseConfigs, validateConfigs } from "./io";
+import { useEffect, useRef, useState } from "react";
+import { LazyApi } from "./api";
+import { Step } from "./components";
+import { Lazy } from "./lazy";
 
-const {"lazy-dir": configDir, "lazy-path": PATH} = getPreferenceValues()
-const CONFIG_DIR = configDir.replace("~", homedir())
+const { "lazy-dir": configDir, "lazy-path": PATH } = getPreferenceValues();
+const CONFIG_DIR = configDir.replace("~", homedir());
 
-process.env.PATH = PATH
+process.env.PATH = PATH;
 
 const SCHEMA_PATH = resolve(environment.assetsPath, "schema.json");
-async function main() {
-  const configs = await loadConfigs(CONFIG_DIR);
-  validateConfigs(
-    configs,
-    SCHEMA_PATH
-  );
-  const roots = parseConfigs(configs);
-  return render(<RootCommands roots={roots} configDir={CONFIG_DIR}/>);
-}
 
-main();
+export default function listCommands(): JSX.Element {
+  const lazyApi = useRef(new LazyApi(SCHEMA_PATH)).current;
+  const [roots, setRoots] = useState<Lazy.Root[]>();
+
+  useEffect(() => {
+    lazyApi.load(CONFIG_DIR).then(() => {
+      setRoots(lazyApi.listRoots());
+    });
+  }, []);
+
+  return (
+    <List isLoading={typeof roots == "undefined"}>
+      {roots?.map(({ packageName, refs, icon }) =>
+        refs.map((stepReference, index) => {
+          const step = lazyApi.getStep(stepReference, packageName);
+          return (
+            <List.Item
+              key={index}
+              title={stepReference.alias || step.title}
+              subtitle={packageName}
+              icon={icon}
+              keywords={[packageName]}
+              actions={
+                <ActionPanel>
+                  <PushAction
+                    title={stepReference.alias || step.title}
+                    icon={Icon.ArrowRight}
+                    target={<Step step={step} laziApi={lazyApi} />}
+                  />
+                </ActionPanel>
+              }
+            />
+          );
+        })
+      )}
+    </List>
+  );
+}

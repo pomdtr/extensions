@@ -8,11 +8,10 @@ export namespace Lazy {
     steps: {
       [step_id: string]: Step;
     };
-    roots?: StaticItem[];
+    roots: StepAction[];
   }
 
-  export interface BaseStep {
-    type: "query" | "filter" | "static" | "form" | "preview";
+  export interface List {
     title: string;
     /**
      * @ignore
@@ -25,9 +24,9 @@ export namespace Lazy {
     params?: StepEnv;
   }
 
-  export interface DynamicList extends BaseStep {
-    type: "filter" | "query"
-    items: DynamicItems;
+  export interface DynamicList extends List {
+    type: "filter" | "query";
+    items: ItemTemplate;
   }
 
   export interface QueryList extends DynamicList {
@@ -38,37 +37,25 @@ export namespace Lazy {
     type: "filter";
   }
 
-  export interface StaticList extends BaseStep {
-    type: "static"
-    items: StaticItem[];
-  }
-
   export interface Item {
-    title?: string;
+    title: string;
+    icon?: string;
     subtitle?: string;
     preview?: string;
+    actions?: Action[];
   }
 
-  export interface DynamicItems extends Item {
+  export interface ItemTemplate {
+    title?: string;
+    icon?: string;
+    subtitle?: string;
+    preview?: string;
     delimiter?: string;
     generator: string | Command;
     actions?: Action[];
   }
 
-  export interface StaticItem extends Item {
-    title: string;
-    actions?: Action[];
-  }
-
-  export interface Preview extends BaseStep {
-    type: "preview";
-    shell?: string;
-    content: string | Command;
-    markdown?: boolean;
-    actions?: Action[];
-  }
-
-  export type Step = StaticList | FilterList | QueryList | Preview | Form;
+  export type Step = FilterList | QueryList;
 
   export interface Command {
     command: string;
@@ -77,80 +64,42 @@ export namespace Lazy {
   }
 
   interface BaseAction {
-    condition?: string
+    condition?: string;
     shortcut?: string;
   }
 
   export interface CommandAction extends Command, BaseAction {
-    type: "command"
+    type: "run";
     title: string;
     reloadOnSuccess?: string;
     confirm?: boolean;
   }
 
-  export interface StepAction extends BaseAction {
-    type: "step"
+  export interface StepReference {
     alias?: string;
     packageName?: string;
     target: string;
     params?: StepEnv;
   }
 
-  export type Action = CommandAction | StepAction
+  export interface StepAction extends BaseAction, StepReference {
+    type: "ref";
+  }
 
-  export interface Packages {
-    [packageName: string]: {
-      steps: { [stepId: string]: Step },
-      prefs: StepEnv
-    };
+  export type Action = CommandAction | StepAction;
+
+  export interface Package {
+    steps: { [stepId: string]: Step };
+    prefs: StepEnv;
+  }
+
+  export interface Root {
+    icon?: string,
+    refs: StepReference[],
+    packageName: string,
   }
 
   export interface StepEnv {
     [key: string]: unknown;
   }
-
-  export interface Form extends BaseStep {
-    fields: Field[];
-    type: "form";
-
-    action: Action;
-  }
-
-  export interface BaseField {
-    type: "checkbox" | "dropdown" | "textfield" | "textarea";
-    dest: string;
-    title: string;
-    default?: unknown;
-  }
-
-  export interface CheckBox extends BaseField {
-    type: "checkbox";
-    default?: boolean;
-  }
-
-  export interface DropDown extends BaseField {
-    items: string[];
-    type: "dropdown";
-    default?: string;
-  }
-
-  export interface TextField extends BaseField {
-    type: "textfield";
-    default?: string;
-  }
-
-  export interface TextArea extends BaseField {
-    type: "textarea";
-    default?: string;
-  }
-
-  export type Field = CheckBox | DropDown | TextField | TextArea;
-
-export interface Roots {
-  [packageName: string]: {
-    items: Lazy.StaticItem[];
-    icon?: string;
-    requirements?: string[];
-  };
-}
 }
