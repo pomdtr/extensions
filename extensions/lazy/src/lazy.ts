@@ -71,7 +71,7 @@ export namespace Lazy {
   export interface CommandAction extends Command, BaseAction {
     type: "run";
     title: string;
-    reloadOnSuccess?: string;
+    updateItems?: boolean;
     confirm?: boolean;
   }
 

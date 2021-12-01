@@ -1,5 +1,17 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ActionPanel, Detail, Icon, KeyEquivalent, List, PushAction, useNavigation } from "@raycast/api";
+import {
+  ActionPanel,
+  Detail,
+  Icon,
+  KeyEquivalent,
+  List,
+  popToRoot,
+  PushAction,
+  showHUD,
+  showToast,
+  ToastStyle,
+  useNavigation
+} from "@raycast/api";
 import { useEffect, useState } from "react";
 import { LazyApi } from "./api";
 import { Lazy } from "./lazy";
@@ -13,9 +25,9 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
   let shouldUpdate = true;
 
   const refreshItems = () => {
-    if (step.type == "query" && !query){
-      setState({items: [], isLoading: false});
-      return
+    if (step.type == "query" && !query) {
+      setState({ items: [], isLoading: false });
+      return;
     }
 
     const { params, prefs } = step;
@@ -60,14 +72,7 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
                     />
                   );
                 }
-                return (
-                  <CommandAction
-                    key={index}
-                    action={action}
-                    onAction={() => laziApi.exec(action.command, action.shell)}
-                    refresh={refreshItems}
-                  />
-                );
+                return <CommandAction key={index} action={action} laziApi={laziApi} refreshItems={refreshItems} />;
               })}
               {item.preview ? (
                 <PushAction
@@ -85,8 +90,23 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
   );
 }
 
-function CommandAction(props: { action: Lazy.CommandAction; onAction: () => void; refresh?: () => void }) {
-  const { action, onAction } = props;
+function CommandAction(props: { action: Lazy.CommandAction; laziApi: LazyApi; refreshItems: () => void }) {
+  const { action, laziApi, refreshItems } = props;
+
+  const displayRes = (content: string) => {
+    if (action.updateItems) return showToast(ToastStyle.Success, content);
+    return showHUD(content);
+  };
+
+  const runCommand = async () => {
+    const { stdout } = await laziApi.exec(action.command, action.shell);
+    if (stdout) {
+      displayRes(stdout);
+    }
+    if (action.updateItems) refreshItems();
+    else popToRoot();
+  };
+
   if (action.confirm)
     return (
       <PushAction
@@ -96,7 +116,7 @@ function CommandAction(props: { action: Lazy.CommandAction; onAction: () => void
         target={
           <ConfirmAction
             markdown={`> ⚠️ You're about to run the command **${action.command}**.  \n> Confirm?`}
-            onConfirm={onAction}
+            onConfirm={runCommand}
           />
         }
       />
@@ -106,7 +126,7 @@ function CommandAction(props: { action: Lazy.CommandAction; onAction: () => void
       title={action.title || action.command}
       icon={Icon.Hammer}
       shortcut={action.shortcut ? { modifiers: ["ctrl"], key: action.shortcut as KeyEquivalent } : undefined}
-      onAction={onAction}
+      onAction={runCommand}
     />
   );
 }
