@@ -28,14 +28,14 @@ export class LazyApi {
     }
 
     this.packages = Object.fromEntries(configs.map((config) => [config.packageName, getPackage(config)]));
-    this.roots = configs.map(config => {
-      const {packageName, roots, icon} = config
-      return {packageName, refs: roots, icon}
-    })
+    this.roots = configs.map((config) => {
+      const { packageName, roots, icon } = config;
+      return { packageName, refs: roots, icon };
+    });
   }
 
   listRoots() {
-    return this.roots
+    return this.roots;
   }
 
   getStep(reference: Lazy.StepReference, currentPackageName: string): Lazy.Step {
@@ -55,6 +55,7 @@ export class LazyApi {
   }
 
   exec(command: string, shell = "/bin/bash") {
+    console.debug(command);
     return execaCommand(command, { cwd: homedir(), shell }).catch((error) => {
       console.error(error.message);
       showToast(ToastStyle.Failure, "An error occurred!", error.message);
@@ -102,7 +103,7 @@ export function getPackage(config: Lazy.Config) {
     which.sync(requirement);
   }
 
-  pkg.prefs = config.prefs || {}
+  pkg.prefs = config.prefs || {};
   for (const [step_id, step] of Object.entries(config.steps || {})) {
     pkg.steps[step_id] = {
       ...config.steps[step_id],

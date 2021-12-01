@@ -13,8 +13,14 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
   let shouldUpdate = true;
 
   const refreshItems = () => {
+    if (step.type == "query" && !query){
+      setState({items: [], isLoading: false});
+      return
+    }
+
     const { params, prefs } = step;
-    laziApi.getItems(step, { params, prefs, query }).then((items) => {
+    const templateParam = step.type == "query" ? { params, prefs, query } : { params, prefs };
+    laziApi.getItems(step, templateParam).then((items) => {
       if (shouldUpdate) setState({ items, isLoading: false });
     });
   };
@@ -31,7 +37,6 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
       navigationTitle={step.title}
       isLoading={state.isLoading}
       onSearchTextChange={step.type == "query" ? setQuery : undefined}
-      searchBarPlaceholder="Search ..."
     >
       {state.items.map((item, index) => (
         <List.Item
