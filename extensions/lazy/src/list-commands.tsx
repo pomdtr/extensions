@@ -32,7 +32,6 @@ export default function listCommands(): JSX.Element {
             <List.Item
               key={index}
               title={stepReference.alias || step.title}
-              subtitle={packageName}
               icon={icon}
               keywords={[packageName]}
               actions={

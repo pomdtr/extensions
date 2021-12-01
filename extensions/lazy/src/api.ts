@@ -69,7 +69,6 @@ export class LazyApi {
     const lineParams = { line, json, words, ...templateParams };
     return {
       title: itemTemplate.title ? renderString(itemTemplate.title, lineParams) : line,
-      subtitle: itemTemplate.subtitle ? renderString(itemTemplate.subtitle, lineParams) : undefined,
       icon: itemTemplate.icon ? renderString(itemTemplate.icon, lineParams) : undefined,
       preview: itemTemplate.preview ? renderString(itemTemplate.preview, lineParams) : undefined,
       actions: itemTemplate.actions?.map((action) => renderAction(action, lineParams)),
@@ -81,7 +80,9 @@ export class LazyApi {
     const generator =
       typeof itemTemplate.generator == "string" ? { command: itemTemplate.generator } : itemTemplate.generator;
 
-    const { stdout } = await this.exec(renderString(generator.command, templateParams), generator.shell);
+    const { stdout } = await this.exec(renderString(generator.command, templateParams), generator.shell).catch(() => {
+      throw new Error(generator.errorMessage);
+    })
     const lines = stdout.split("\n");
 
     return lines.map((line) => {

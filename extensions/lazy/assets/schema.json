@@ -8,6 +8,9 @@
                 "command": {
                     "type": "string"
                 },
+                "errorMessage": {
+                    "type": "string"
+                },
                 "shell": {
                     "type": "string"
                 },
@@ -17,47 +20,6 @@
             },
             "required": [
                 "command"
-            ],
-            "type": "object"
-        },
-        "Lazy.CommandAction": {
-            "additionalProperties": false,
-            "properties": {
-                "command": {
-                    "type": "string"
-                },
-                "condition": {
-                    "type": "string"
-                },
-                "confirm": {
-                    "type": "boolean"
-                },
-                "reloadOnSuccess": {
-                    "type": "string"
-                },
-                "shell": {
-                    "type": "string"
-                },
-                "shortcut": {
-                    "type": "string"
-                },
-                "skip_lines": {
-                    "type": "number"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "enum": [
-                        "run"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "command",
-                "title",
-                "type"
             ],
             "type": "object"
         },
@@ -94,10 +56,10 @@
                     "items": {
                         "anyOf": [
                             {
-                                "$ref": "#/definitions/Lazy.CommandAction"
+                                "$ref": "#/definitions/Lazy.RunAction"
                             },
                             {
-                                "$ref": "#/definitions/Lazy.StepAction"
+                                "$ref": "#/definitions/Lazy.RefAction"
                             }
                         ]
                     },
@@ -120,9 +82,6 @@
                     "type": "string"
                 },
                 "preview": {
-                    "type": "string"
-                },
-                "subtitle": {
                     "type": "string"
                 },
                 "title": {
@@ -160,7 +119,7 @@
             ],
             "type": "object"
         },
-        "Lazy.StepAction": {
+        "Lazy.RefAction": {
             "additionalProperties": false,
             "properties": {
                 "alias": {
@@ -194,6 +153,50 @@
             ],
             "type": "object"
         },
+        "Lazy.RunAction": {
+            "additionalProperties": false,
+            "properties": {
+                "command": {
+                    "type": "string"
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "confirm": {
+                    "type": "boolean"
+                },
+                "errorMessage": {
+                    "type": "string"
+                },
+                "shell": {
+                    "type": "string"
+                },
+                "shortcut": {
+                    "type": "string"
+                },
+                "skip_lines": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "run"
+                    ],
+                    "type": "string"
+                },
+                "updateItems": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "command",
+                "title",
+                "type"
+            ],
+            "type": "object"
+        },
         "Lazy.StepEnv": {
             "additionalProperties": {},
             "type": "object"
@@ -217,7 +220,7 @@
         },
         "roots": {
             "items": {
-                "$ref": "#/definitions/Lazy.StepAction"
+                "$ref": "#/definitions/Lazy.RefAction"
             },
             "type": "array"
         },

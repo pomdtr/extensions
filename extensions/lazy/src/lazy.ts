@@ -8,7 +8,7 @@ export namespace Lazy {
     steps: {
       [step_id: string]: Step;
     };
-    roots: StepAction[];
+    roots: RefAction[];
   }
 
   export interface List {
@@ -40,7 +40,6 @@ export namespace Lazy {
   export interface Item {
     title: string;
     icon?: string;
-    subtitle?: string;
     preview?: string;
     actions?: Action[];
   }
@@ -48,7 +47,6 @@ export namespace Lazy {
   export interface ItemTemplate {
     title?: string;
     icon?: string;
-    subtitle?: string;
     preview?: string;
     delimiter?: string;
     generator: string | Command;
@@ -59,6 +57,7 @@ export namespace Lazy {
 
   export interface Command {
     command: string;
+    errorMessage?: string;
     skip_lines?: number;
     shell?: string;
   }
@@ -68,7 +67,7 @@ export namespace Lazy {
     shortcut?: string;
   }
 
-  export interface CommandAction extends Command, BaseAction {
+  export interface RunAction extends Command, BaseAction {
     type: "run";
     title: string;
     updateItems?: boolean;
@@ -82,11 +81,11 @@ export namespace Lazy {
     params?: StepEnv;
   }
 
-  export interface StepAction extends BaseAction, StepReference {
+  export interface RefAction extends BaseAction, StepReference {
     type: "ref";
   }
 
-  export type Action = CommandAction | StepAction;
+  export type Action = RunAction | RefAction;
 
   export interface Package {
     steps: { [stepId: string]: Step };

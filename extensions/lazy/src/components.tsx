@@ -34,6 +34,8 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
     const templateParam = step.type == "query" ? { params, prefs, query } : { params, prefs };
     laziApi.getItems(step, templateParam).then((items) => {
       if (shouldUpdate) setState({ items, isLoading: false });
+    }).catch((e) =>  {
+      showToast(ToastStyle.Failure, "An error occured!", e.toString())
     });
   };
 
@@ -54,9 +56,7 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
         <List.Item
           key={index}
           title={item.title}
-          subtitle={item.subtitle}
           icon={Icon.Dot}
-          keywords={item.subtitle?.split(" ")}
           actions={
             <ActionPanel>
               {item.actions?.map((action, index) => {
@@ -90,7 +90,7 @@ export function Step(props: { step: Lazy.Step; laziApi: LazyApi }) {
   );
 }
 
-function CommandAction(props: { action: Lazy.CommandAction; laziApi: LazyApi; refreshItems: () => void }) {
+function CommandAction(props: { action: Lazy.RunAction; laziApi: LazyApi; refreshItems: () => void }) {
   const { action, laziApi, refreshItems } = props;
 
   const displayRes = (content: string) => {
@@ -99,12 +99,16 @@ function CommandAction(props: { action: Lazy.CommandAction; laziApi: LazyApi; re
   };
 
   const runCommand = async () => {
-    const { stdout } = await laziApi.exec(action.command, action.shell);
-    if (stdout) {
-      displayRes(stdout);
+    try {
+      const { stdout } = await laziApi.exec(action.command, action.shell);
+      if (stdout) {
+        displayRes(stdout);
+      }
+      if (action.updateItems) refreshItems();
+      else popToRoot();
+    } catch(e) {
+      showToast(ToastStyle.Failure, "An error occured!", action.errorMessage)
     }
-    if (action.updateItems) refreshItems();
-    else popToRoot();
   };
 
   if (action.confirm)
