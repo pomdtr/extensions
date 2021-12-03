@@ -29,7 +29,7 @@ export default function listCommands(): JSX.Element {
     setRoots(roots);
   }, []);
 
-  const fuse = new Fuse(roots || [], { keys: ["title", "subtitle"], ignoreLocation: true, threshold: 0.3 });
+  const fuse = new Fuse(roots || [], { keys: ["title", "subtitle"], ignoreLocation: true, threshold: 0.2 });
   const results = query ? fuse.search(query).map((res) => res.item) : roots;
 
   const items: Lazy.Item[] = commandFrecency.sort({
