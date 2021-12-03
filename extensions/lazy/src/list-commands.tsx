@@ -2,8 +2,9 @@ import { ActionPanel, environment, getPreferenceValues, Icon, List, PushAction }
 import { execaSync } from "execa";
 import Frecency from "frecency";
 import { readFileSync, writeFileSync } from "fs";
+import Fuse from "fuse.js";
 import { homedir } from "os";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Action, Preview, Step } from "./components";
 import { Lazy } from "./lazy";
 
@@ -32,7 +33,7 @@ const commandFrecency = new Frecency({
 });
 
 export default function listCommands(): JSX.Element {
-  const [roots, setRoots] = useState<Lazy.Item[]>();
+  const [roots, setRoots] = useState<Lazy.Item[]>([]);
   const [query, setQuery] = useState<string>();
 
   useEffect(() => {
@@ -42,15 +43,12 @@ export default function listCommands(): JSX.Element {
     setRoots(roots);
   }, []);
 
+  const fuse = useMemo(() => new Fuse(roots || [], {keys: ["title", "subtitle"]}), [roots])
+
+
   const items: Lazy.Item[] = commandFrecency.sort({
     searchQuery: query,
-    results:
-      roots?.filter((root) =>
-        [root.title, root.subtitle || ""]
-          .join()
-          .toLowerCase()
-          .includes(query?.toLowerCase() || "")
-      ) || [],
+    results: query ? fuse.search(query).map(res => res.item): roots
   });
 
   return (
