@@ -28,7 +28,7 @@
       "name": "lazy-path",
       "description": "",
       "type": "textfield",
-      "default": "/bin:/usr/bin:/usr/local/bin:/opt/homebrew",
+      "default": "/bin:/usr/bin:/usr/local/bin:/opt/homebrew:~/.local/bin",
       "title": "PATH Variable",
       "required": true
     }
@@ -36,16 +36,14 @@
   "dependencies": {
     "@raycast/api": "^1.25.6",
     "execa": "^6.0.0",
-    "globby": "^12.0.2",
-    "jsonschema": "^1.4.0",
-    "nunjucks": "^3.2.3",
-    "which": "^2.0.2",
-    "yaml": "^1.10.2"
+    "frecency": "^1.3.2",
+    "fuse": "^0.4.0",
+    "node-localstorage": "^2.2.1"
   },
   "devDependencies": {
+    "@types/frecency": "^1.3.2",
     "@types/node": "~16.10.0",
     "@types/react": "^17.0.28",
-    "@types/which": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "eslint": "^7.32.0",

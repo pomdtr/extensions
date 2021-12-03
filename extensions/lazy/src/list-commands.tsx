@@ -1,52 +1,97 @@
 import { ActionPanel, environment, getPreferenceValues, Icon, List, PushAction } from "@raycast/api";
+import { execaSync } from "execa";
+import Frecency from "frecency";
+import { readFileSync, writeFileSync } from "fs";
 import { homedir } from "os";
-import { resolve } from "path";
-import { useEffect, useRef, useState } from "react";
-import { LazyApi } from "./api";
-import { Step } from "./components";
+import { useEffect, useState } from "react";
+import { Action, Preview, Step } from "./components";
 import { Lazy } from "./lazy";
 
-const { "lazy-dir": configDir, "lazy-path": PATH } = getPreferenceValues();
-const CONFIG_DIR = configDir.replace("~", homedir());
+const { "lazy-path": PATH } = getPreferenceValues();
+process.env.PATH = PATH.replace("~", homedir());
 
-process.env.PATH = PATH;
+// SupportStorage implements the minimal API required by frecency
+class SupportStorage {
+  getItem(key: string): string | undefined {
+    try {
+      const value = readFileSync(environment.supportPath + "/" + key).toString();
+      return value;
+    } catch {
+      return undefined;
+    }
+  }
+  setItem(key: string, value: string): void {
+    writeFileSync(environment.supportPath + "/" + key, value);
+  }
+}
 
-const SCHEMA_PATH = resolve(environment.assetsPath, "schema.json");
+const commandFrecency = new Frecency({
+  key: "commands.json", // "key" becomes "filename"
+  idAttribute: "title",
+  storageProvider: new SupportStorage(),
+});
 
 export default function listCommands(): JSX.Element {
-  const lazyApi = useRef(new LazyApi(SCHEMA_PATH)).current;
-  const [roots, setRoots] = useState<Lazy.Root[]>();
+  const [roots, setRoots] = useState<Lazy.Item[]>();
+  const [query, setQuery] = useState<string>();
 
   useEffect(() => {
-    lazyApi.load(CONFIG_DIR).then(() => {
-      setRoots(lazyApi.listRoots());
-    });
+    const { stdout } = execaSync("lazy", ["ls"]);
+    const lines = stdout.split("\n");
+    const roots = lines.map((line) => JSON.parse(line));
+    setRoots(roots);
   }, []);
 
+  const items: Lazy.Item[] = commandFrecency.sort({
+    searchQuery: query,
+    results:
+      roots?.filter((root) =>
+        [root.title, root.subtitle || ""]
+          .join()
+          .toLowerCase()
+          .includes(query?.toLowerCase() || "")
+      ) || [],
+  });
+
   return (
-    <List isLoading={typeof roots == "undefined"}>
-      {roots?.map(({ packageName, refs, icon }) =>
-        refs.map((stepReference, index) => {
-          const step = lazyApi.getStep(stepReference, packageName);
-          return (
-            <List.Item
-              key={index}
-              title={stepReference.alias || step.title}
-              icon={icon}
-              keywords={[packageName]}
-              actions={
-                <ActionPanel>
+    <List isLoading={typeof roots == "undefined"} onSearchTextChange={setQuery}>
+      {items?.map((root, index) => (
+        <List.Item
+          key={index}
+          title={root.title}
+          subtitle={root.subtitle}
+          keywords={root.subtitle ? [root.subtitle] : undefined}
+          icon={root.icon}
+          actions={
+            <ActionPanel>
+              {root.actions?.map((action, index) =>
+                action.type == "ref" ? (
                   <PushAction
-                    title={stepReference.alias || step.title}
+                    key={index}
+                    title={action.title}
                     icon={Icon.ArrowRight}
-                    target={<Step step={step} laziApi={lazyApi} />}
+                    target={<Step reference={action} />}
+                    onPush={() => commandFrecency.save({ searchQuery: query || "", selectedId: root.title })}
                   />
-                </ActionPanel>
-              }
-            />
-          );
-        })
-      )}
+                ) : (
+                  <Action
+                    key={index}
+                    action={action}
+                    onAction={() => commandFrecency.save({ searchQuery: query || "", selectedId: root.title })}
+                  />
+                )
+              )}
+              {root.preview ? (
+                <PushAction
+                  title="Show Preview"
+                  icon={Icon.Text}
+                  target={<Preview command={root.preview as unknown as Lazy.Command} />}
+                />
+              ) : null}
+            </ActionPanel>
+          }
+        />
+      ))}
     </List>
   );
 }
