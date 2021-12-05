@@ -27,12 +27,11 @@ export function Preview(props: { command: Lazy.Command }) {
   useEffect(() => {
     const input = JSON.stringify(props.command);
     try {
-      console.debug(input);
       const { stdout } = execaSync("lazy", ["run"], { input });
       setContent(stdout);
     } catch (e) {
       console.error(e);
-      copyTextToClipboard(`echo $'${escapeQuotes(input)}' | lazy run`);
+      copyTextToClipboard(`echo '${escapeQuotes(input)}' | lazy run`);
       showToast(ToastStyle.Failure, "An error occured!", "Command copied to clipboard");
     }
   }, []);
@@ -47,28 +46,28 @@ export function Preview(props: { command: Lazy.Command }) {
 
 export function Step(props: { reference: Lazy.StepReference }) {
   const { reference } = props;
-  const [list, setList] = useState<Lazy.List>();
-
-  useEffect(() => {
+  const [state, setState] = useState<{ list?: Lazy.List; isLoading: boolean }>({ isLoading: true });
+  const refreshItems = () => {
     const input = JSON.stringify(reference);
+    setState({...state, isLoading: true });
     try {
-      console.debug(input);
       const { stdout } = execaSync("lazy", ["ref"], { input });
       const list: Lazy.List = JSON.parse(stdout);
-      setList(list);
+      setState({ list, isLoading: false });
     } catch (e) {
       console.error(e);
-      copyTextToClipboard(`echo '${escapeQuotes(input)}' | lazy run`);
+      copyTextToClipboard(`echo '${escapeQuotes(input)}' | lazy ref`);
       showToast(ToastStyle.Failure, "An error occured!", "Command copied to clipboard");
     }
-  }, []);
+  };
+  useEffect(refreshItems, []);
 
-  if (list && list.type == "query") return <QueryStep reference={reference} list={list} />;
+  if (state.list?.type == "query") return <QueryStep reference={reference} list={state.list} />;
 
   return (
-    <List isLoading={typeof list == "undefined"}>
-      {list?.items.map((item, index) => (
-        <ListItem item={item} key={index} />
+    <List isLoading={state.isLoading}>
+      {state.list?.items.map((item, index) => (
+        <ListItem item={item} key={index} updateItems={refreshItems} />
       ))}
     </List>
   );
@@ -77,12 +76,11 @@ export function Step(props: { reference: Lazy.StepReference }) {
 export function QueryStep(props: { reference: Lazy.StepReference; list: Lazy.List }) {
   const [query, setQuery] = useState<string>();
   const [state, setState] = useState<{ list: Lazy.List; isLoading: boolean }>({ list: props.list, isLoading: false });
-
   let shouldUpdate = true;
+
   const refreshItems = () => {
     setState({ ...state, isLoading: true });
     const input = JSON.stringify(props.reference);
-    console.debug(input, query);
     execa("lazy", query ? ["ref", query] : ["ref"], { input })
       .then(({ stdout }) => {
         const list: Lazy.List = JSON.parse(stdout);
@@ -90,13 +88,12 @@ export function QueryStep(props: { reference: Lazy.StepReference; list: Lazy.Lis
       })
       .catch(async (e) => {
         console.error(e);
-        copyTextToClipboard(`lazy ref '${query}' $'${escapeQuotes(input)}'`);
+        copyTextToClipboard(`echo '${escapeQuotes(input)}' | lazy ref '${query}'`);
         await showToast(ToastStyle.Failure, "An error occured!", "Command copied to clipboard");
       });
   };
 
   useEffect(() => {
-    if (!query) return;
     refreshItems();
     return () => {
       shouldUpdate = false;
@@ -106,19 +103,18 @@ export function QueryStep(props: { reference: Lazy.StepReference; list: Lazy.Lis
   return (
     <List onSearchTextChange={setQuery} throttle={true} isLoading={state.isLoading}>
       {state.list.items.map((item, index) => (
-        <ListItem item={item} key={index} />
+        <ListItem item={item} key={index} updateItems={refreshItems} />
       ))}
     </List>
   );
 }
 
-export function ListItem(props: { item: Lazy.Item }) {
+export function ListItem(props: { item: Lazy.Cache; updateItems: () => void }) {
   const item = props.item;
   return (
     <List.Item
       title={item.title}
       subtitle={item.subtitle}
-      icon={item.icon}
       actions={
         <ActionPanel>
           {item.actions?.map((action, index) => {
@@ -133,7 +129,7 @@ export function ListItem(props: { item: Lazy.Item }) {
                 />
               );
             }
-            return <Action key={index} action={action} />;
+            return <Action key={index} action={action} updateItems={props.updateItems} />;
           })}
           {item.preview ? (
             <PushAction
@@ -148,8 +144,8 @@ export function ListItem(props: { item: Lazy.Item }) {
   );
 }
 
-export function Action(props: { action: Lazy.RunAction; onAction?: () => void }) {
-  const { action, onAction } = props;
+export function Action(props: { action: Lazy.RunAction; onAction?: () => void; updateItems: () => void }) {
+  const { action, onAction, updateItems } = props;
 
   const displayRes = (content: string) => {
     if (action.updateItems) return showToast(ToastStyle.Success, content);
@@ -161,19 +157,26 @@ export function Action(props: { action: Lazy.RunAction; onAction?: () => void })
     try {
       const { stdout } = execaSync("lazy", ["run"], { input });
       if (stdout) displayRes(stdout);
+      if (updateItems) updateItems();
       else {
         await closeMainWindow();
         await popToRoot();
       }
     } catch (e) {
-      console.debug(e);
-      copyTextToClipboard(`echo $'${escapeQuotes(input)}' | lazy run`);
+      console.error(e);
+      copyTextToClipboard(`echo '${escapeQuotes(input)}' | lazy run`);
       await showToast(ToastStyle.Failure, "An error occured!", "Command copied to clipboard");
     }
   };
 
-  return <ActionPanel.Item title={action.title || action.command} icon={Icon.Hammer} onAction={async () => {
-    await runCommand()
-    if (onAction) onAction()
-  }} />;
+  return (
+    <ActionPanel.Item
+      title={action.title || action.command}
+      icon={Icon.Hammer}
+      onAction={async () => {
+        await runCommand();
+        if (onAction) onAction();
+      }}
+    />
+  );
 }

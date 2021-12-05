@@ -19,20 +19,22 @@ const commandFrecency = new Frecency({
 });
 
 export default function listCommands(): JSX.Element {
-  const [roots, setRoots] = useState<Lazy.Item[]>();
+  const [roots, setRoots] = useState<Lazy.Cache[]>();
   const [query, setQuery] = useState<string>();
 
-  useEffect(() => {
+  const updateItems = () => {
     const { stdout } = execaSync("lazy", ["ls"]);
     const lines = stdout.split("\n");
     const roots = lines.map((line) => JSON.parse(line));
     setRoots(roots);
-  }, []);
+  }
+
+  useEffect(updateItems, []);
 
   const fuse = new Fuse(roots || [], { keys: ["title", "subtitle"], ignoreLocation: true, threshold: 0.2 });
   const results = query ? fuse.search(query).map((res) => res.item) : roots;
 
-  const items: Lazy.Item[] = commandFrecency.sort({
+  const items: Lazy.Cache[] = commandFrecency.sort({
     searchQuery: query,
     results: results || [],
   });
@@ -45,7 +47,6 @@ export default function listCommands(): JSX.Element {
           title={root.title}
           subtitle={root.subtitle}
           keywords={root.subtitle ? [root.subtitle] : undefined}
-          icon={root.icon}
           actions={
             <ActionPanel>
               {root.actions?.map((action, index) =>
@@ -62,6 +63,7 @@ export default function listCommands(): JSX.Element {
                     key={index}
                     action={action}
                     onAction={() => commandFrecency.save({ searchQuery: query || "", selectedId: root.title })}
+                    updateItems={updateItems}
                   />
                 )
               )}
