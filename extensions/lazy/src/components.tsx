@@ -47,11 +47,12 @@ export function Preview(props: { command: Lazy.Command }) {
 export function Step(props: { reference: Lazy.StepReference }) {
   const { reference } = props;
   const [state, setState] = useState<{ list?: Lazy.List; isLoading: boolean }>({ isLoading: true });
-  const refreshItems = () => {
+  const refreshItems = (skipCache = false) => {
     const input = JSON.stringify(reference);
-    setState({...state, isLoading: true });
+    setState({ ...state, isLoading: true });
+    console.log(input)
     try {
-      const { stdout } = execaSync("lazy", ["ref"], { input });
+      const { stdout } = execaSync("lazy", skipCache ? ["ref", "--skip-cache"] : ["ref"], { input });
       const list: Lazy.List = JSON.parse(stdout);
       setState({ list, isLoading: false });
     } catch (e) {
@@ -67,7 +68,7 @@ export function Step(props: { reference: Lazy.StepReference }) {
   return (
     <List isLoading={state.isLoading}>
       {state.list?.items.map((item, index) => (
-        <ListItem item={item} key={index} updateItems={refreshItems} />
+        <ListItem item={item} key={index} updateItems={() => refreshItems(true)} />
       ))}
     </List>
   );
@@ -138,6 +139,7 @@ export function ListItem(props: { item: Lazy.Cache; updateItems: () => void }) {
               target={<Preview command={item.preview as unknown as Lazy.Command} />}
             />
           ) : null}
+          <ActionPanel.Item title="Reload" icon={Icon.ArrowClockwise} onAction={props.updateItems} />
         </ActionPanel>
       }
     />
@@ -157,8 +159,11 @@ export function Action(props: { action: Lazy.RunAction; onAction?: () => void; u
     try {
       const { stdout } = execaSync("lazy", ["run"], { input });
       if (stdout) displayRes(stdout);
-      if (updateItems) updateItems();
-      else {
+      if (updateItems) {
+        const toast = await showToast(ToastStyle.Animated, "Refreshing...");
+        updateItems();
+        toast.hide();
+      } else {
         await closeMainWindow();
         await popToRoot();
       }
