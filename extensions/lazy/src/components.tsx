@@ -19,7 +19,7 @@ import { Lazy } from "./lazy";
 
 const codeblock = (text: string) => "```\n" + text + "\n```";
 const escapeQuotes = (text: string) => {
-  return text.replace("'", "'\"'\"'");
+  return text.replace(/'/g, "'\"'\"'");
 };
 
 export function Preview(props: { command: Lazy.Command }) {
@@ -157,9 +157,9 @@ export function Action(props: { action: Lazy.RunAction; onAction?: () => void; u
   const runCommand = async () => {
     const input = JSON.stringify(props.action);
     try {
-      const { stdout } = execaSync("lazy", ["run"], { input });
+      const { stdout } = execaSync("lazy", ["run"]  , { input });
       if (stdout) displayRes(stdout);
-      if (updateItems) {
+      if (action.updateItems) {
         const toast = await showToast(ToastStyle.Animated, "Refreshing...");
         updateItems();
         toast.hide();
