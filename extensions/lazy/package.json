@@ -38,9 +38,19 @@
     "typescript": "^4.4.3"
   },
   "scripts": {
-    "build": "node generateCommands.js && ray build -e dist"
+    "build": "node updateCommands && timeout 5 ray develop"
   },
   "commands": [
+    {
+      "name": "listcontainers",
+      "title": "📦 List Containers",
+      "keywords": [
+        "docker"
+      ],
+      "subtitle": "docker",
+      "description": "Auto-generated command by Lazy",
+      "mode": "view"
+    },
     {
       "name": "listfiles",
       "title": "‣ List Files",
@@ -178,6 +188,26 @@
         "jrnl"
       ],
       "subtitle": "jrnl",
+      "description": "Auto-generated command by Lazy",
+      "mode": "view"
+    },
+    {
+      "name": "switchcontext",
+      "title": "Switch Context",
+      "keywords": [
+        "kubectl"
+      ],
+      "subtitle": "kubectl",
+      "description": "Auto-generated command by Lazy",
+      "mode": "view"
+    },
+    {
+      "name": "showpods",
+      "title": "Show Pods",
+      "keywords": [
+        "kubectl"
+      ],
+      "subtitle": "kubectl",
       "description": "Auto-generated command by Lazy",
       "mode": "view"
     },

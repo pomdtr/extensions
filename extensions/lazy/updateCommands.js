@@ -28,7 +28,7 @@ export default function Command() {
   fs.writeFileSync(resolve(commandDir, `${sanitizeFilename(root.title)}.tsx`), template);
 }
 
-const manifestString = fs.readFileSync("package.template.json", { encoding: "utf8" });
+const manifestString = fs.readFileSync("package.json", { encoding: "utf8" });
 const manifest = JSON.parse(manifestString);
 manifest.commands = roots.map((root) => ({
   name: sanitizeFilename(root.title),
