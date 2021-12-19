@@ -1,0 +1,43 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "lazy",
+  "title": "Lazy: Quickly Build Raycast Commands",
+  "description": "Raycast Lazycli Integration",
+  "icon": "command-icon.png",
+  "author": "pomdtr",
+  "license": "MIT",
+  "preferences": [
+    {
+      "name": "lazy-dir",
+      "description": "Directory containing all your lazy configs",
+      "type": "textfield",
+      "default": "~/.config/lazy",
+      "title": "Config Directory",
+      "required": true
+    },
+    {
+      "name": "lazy-path",
+      "description": "",
+      "type": "textfield",
+      "default": "/bin:/usr/bin:/usr/local/bin:/opt/homebrew:~/.local/bin",
+      "title": "PATH Variable",
+      "required": true
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.26.3"
+  },
+  "devDependencies": {
+    "@types/node": "~16.10.0",
+    "@types/react": "^17.0.28",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "react-devtools": "^4.19.2",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "build": "node generateCommands.js && ray build -e dist"
+  }
+}
