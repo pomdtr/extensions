@@ -6,6 +6,7 @@ import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en.json";
 import { useEffect, useState } from "react";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+import { nanoid } from "nanoid";
 
 const parser = new Parser({});
 
@@ -70,7 +71,7 @@ function CopyStory(props: { item: Story }) {
 function ItemToStory(item: Parser.Item, feed: Feed, lastViewed: number) {
   const date = item.pubDate ? Date.parse(item.pubDate) : 0;
   return {
-    guid: item.guid,
+    guid: item.guid || nanoid(),
     title: item.title || "No title",
     subtitle: feed.title,
     link: item.link,
