@@ -7,6 +7,7 @@ import en from "javascript-time-ago/locale/en.json";
 import { useEffect, useState } from "react";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import { nanoid } from "nanoid";
+import { usePromise } from "@raycast/utils";
 
 const parser = new Parser({});
 
@@ -29,7 +30,7 @@ type FeedLastViewed = {
 TimeAgo.addDefaultLocale(en);
 const timeAgo = new TimeAgo("en-US");
 
-function StoryListItem(props: { item: Story }) {
+function StoryListItem(props: { item: Story; refresh: () => void }) {
   return (
     <List.Item
       icon={props.item.icon}
@@ -37,9 +38,14 @@ function StoryListItem(props: { item: Story }) {
       subtitle={props.item.subtitle}
       actions={
         <ActionPanel>
-          <OpenStory item={props.item} />
-          <ReadStory item={props.item} />
-          <CopyStory item={props.item} />
+          <ActionPanel.Section>
+            <OpenStory item={props.item} />
+            <ReadStory item={props.item} />
+            <CopyStory item={props.item} />
+          </ActionPanel.Section>
+          <ActionPanel.Section>
+            <Action title="Refresh Stories" icon={Icon.ArrowClockwise} onAction={props.refresh} />
+          </ActionPanel.Section>
         </ActionPanel>
       }
       accessories={[
@@ -115,44 +121,24 @@ async function getStories(feeds: Feed[]) {
 }
 
 export function StoriesList(props: { feeds?: Feed[] }) {
-  const [feeds, setFeeds] = useState<Feed[]>([] as Feed[]);
-  const [stories, setStories] = useState<Story[]>([] as Story[]);
-  const [loading, setLoading] = useState(false);
-
-  async function fetchFeeds() {
-    if (props?.feeds) {
-      setFeeds(props.feeds);
-    } else {
-      setFeeds(await getFeeds());
-    }
-  }
-
   async function fetchStories() {
+    const feeds = await getFeeds();
     if (feeds.length === 0) {
       return;
     }
-    setLoading(true);
-    setStories(await getStories(feeds));
-    setLoading(false);
+    return getStories(feeds);
   }
-
-  useEffect(() => {
-    fetchFeeds();
-  }, []);
-
-  useEffect(() => {
-    fetchStories();
-  }, [feeds]);
+  const { data: stories, isLoading, revalidate } = usePromise(fetchStories);
 
   return (
     <List
-      isLoading={loading}
+      isLoading={isLoading}
       actions={
         !props?.feeds && (
           <ActionPanel>
             <Action.Push
               title="Add Feed"
-              target={<AddFeedForm callback={setFeeds} />}
+              target={<AddFeedForm />}
               icon={{ source: Icon.Plus, tintColor: Color.Green }}
               shortcut={{ modifiers: ["cmd"], key: "n" }}
             />
@@ -160,8 +146,8 @@ export function StoriesList(props: { feeds?: Feed[] }) {
         )
       }
     >
-      {stories.map((story) => (
-        <StoryListItem key={story.guid} item={story} />
+      {stories?.map((story) => (
+        <StoryListItem key={story.guid} item={story} refresh={revalidate} />
       ))}
     </List>
   );

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Feed, getFeeds } from "./feeds";
 import Parser from "rss-parser";
 import { getFavicon } from "@raycast/utils";
+import { StoriesList } from "./stories";
 
 const parser = new Parser({});
 
@@ -22,9 +23,9 @@ const getFeedItem = async (feedURL: string) => {
   };
 };
 
-function AddFeedForm(props?: { callback?: (feeds: Feed[]) => void }) {
+function AddFeedForm() {
   const [value, setValue] = useState("");
-  const { pop } = useNavigation();
+  const navigation = useNavigation();
 
   const addFeed = async (values: { feedURL: string }) => {
     try {
@@ -52,10 +53,7 @@ function AddFeedForm(props?: { callback?: (feeds: Feed[]) => void }) {
         title: "Subscribed!",
         message: feedItem.title,
       });
-      if (props?.callback) {
-        props.callback(feedItems);
-        pop();
-      }
+      navigation.push(<StoriesList feeds={[feedItem]} />);
     } catch (error) {
       showToast({
         style: Toast.Style.Failure,

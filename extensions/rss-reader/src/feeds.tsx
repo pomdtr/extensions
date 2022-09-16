@@ -1,5 +1,5 @@
 import { ActionPanel, List, showToast, Icon, Color, Action, LocalStorage, Toast, Image } from "@raycast/api";
-import { useEffect, useState } from "react";
+import { usePromise } from "@raycast/utils";
 import { StoriesList } from "./stories";
 import AddFeedForm from "./subscription-form";
 
@@ -10,15 +10,7 @@ export interface Feed {
 }
 
 function FeedsList() {
-  const [feeds, setFeeds] = useState<Feed[]>([]);
-
-  async function fetchFeeds() {
-    setFeeds(await getFeeds());
-  }
-
-  useEffect(() => {
-    fetchFeeds();
-  }, []);
+  const { isLoading, revalidate, data: feeds = [] } = usePromise(getFeeds);
 
   const removeFeed = async (index: number) => {
     const removedFeed = feeds.at(index) as Feed;
@@ -26,12 +18,12 @@ function FeedsList() {
     feedItems.splice(index, 1);
 
     await LocalStorage.setItem("feeds", JSON.stringify(feedItems));
-    setFeeds(feedItems);
     await showToast({
       style: Toast.Style.Success,
       title: "Unsubscribed from the feed!",
       message: removedFeed.title,
     });
+    revalidate();
   };
 
   const moveFeed = (index: number, change: number) => {
@@ -40,16 +32,17 @@ function FeedsList() {
     }
     const feedItems = [...feeds] as Feed[];
     [feedItems[index], feedItems[index + change]] = [feedItems[index + change], feedItems[index]];
-    setFeeds(feedItems);
+    revalidate();
   };
 
   return (
     <List
+      isLoading={isLoading}
       actions={
         <ActionPanel>
           <Action.Push
             title="Add Feed"
-            target={<AddFeedForm callback={setFeeds} />}
+            target={<AddFeedForm />}
             icon={{ source: Icon.Plus, tintColor: Color.Green }}
             shortcut={{ modifiers: ["cmd"], key: "n" }}
           />
@@ -73,7 +66,7 @@ function FeedsList() {
               <ActionPanel.Section>
                 <Action.Push
                   title="Add Feed"
-                  target={<AddFeedForm callback={setFeeds} />}
+                  target={<AddFeedForm />}
                   icon={{ source: Icon.Plus, tintColor: Color.Green }}
                   shortcut={{ modifiers: ["cmd"], key: "n" }}
                 />
