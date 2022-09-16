@@ -2,8 +2,25 @@ import { ActionPanel, Form, showToast, Icon, Color, useNavigation, Action, Local
 import { useState } from "react";
 import { Feed, getFeeds } from "./feeds";
 import Parser from "rss-parser";
+import { getFavicon } from "@raycast/utils";
 
 const parser = new Parser({});
+
+const getFeedItem = async (feedURL: string) => {
+  const feed = await parser.parseURL(feedURL);
+  const feedIcon = () => {
+    if (feed.image?.url) {
+      return feed.image.url;
+    } else {
+      return getFavicon(feedURL, { fallback: Icon.BlankDocument });
+    }
+  };
+  return {
+    url: feedURL,
+    title: feed.title || "No Title",
+    icon: feedIcon(),
+  };
+};
 
 function AddFeedForm(props?: { callback?: (feeds: Feed[]) => void }) {
   const [value, setValue] = useState("");
@@ -16,12 +33,7 @@ function AddFeedForm(props?: { callback?: (feeds: Feed[]) => void }) {
         style: Toast.Style.Animated,
         title: "Subscribing...",
       });
-      const feed = await parser.parseURL(values.feedURL);
-      const feedItem = {
-        url: values.feedURL,
-        title: feed.title || "No Title",
-        icon: feed.image?.url || Icon.BlankDocument,
-      };
+      const feedItem = await getFeedItem(values.feedURL);
 
       const feedItems = await getFeeds();
       if (feedItems?.some((item) => item.url === feedItem.url)) {

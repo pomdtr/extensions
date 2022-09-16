@@ -1,4 +1,4 @@
-import { ActionPanel, List, showToast, Icon, Color, Action, LocalStorage, Toast } from "@raycast/api";
+import { ActionPanel, List, showToast, Icon, Color, Action, LocalStorage, Toast, Image } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { StoriesList } from "./stories";
 import AddFeedForm from "./subscription-form";
@@ -6,7 +6,7 @@ import AddFeedForm from "./subscription-form";
 export interface Feed {
   url: string;
   title: string;
-  icon: string;
+  icon: Image.ImageLike;
 }
 
 function FeedsList() {

@@ -5,6 +5,7 @@ import Parser from "rss-parser";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en.json";
 import { useEffect, useState } from "react";
+import { getFavicon } from "@raycast/utils";
 
 const parser = new Parser({});
 
