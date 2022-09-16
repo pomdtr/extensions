@@ -7,7 +7,7 @@ import { StoriesList } from "./stories";
 
 const parser = new Parser({});
 
-const getFeedItem = async (feedURL: string) => {
+const getFeedItem = async (feedURL: string): Promise<Feed> => {
   const feed = await parser.parseURL(feedURL);
   const feedIcon = () => {
     if (feed.image?.url) {
@@ -18,6 +18,7 @@ const getFeedItem = async (feedURL: string) => {
   };
   return {
     url: feedURL,
+    link: feed.link,
     title: feed.title || "No Title",
     icon: feedIcon(),
   };

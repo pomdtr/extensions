@@ -6,6 +6,7 @@ import AddFeedForm from "./subscription-form";
 export interface Feed {
   url: string;
   title: string;
+  link?: string;
   icon: Image.ImageLike;
 }
 
@@ -54,14 +55,12 @@ function FeedsList() {
           key={item.url}
           title={item.title}
           icon={item.icon}
+          accessories={[{ text: item.link }]}
           actions={
             <ActionPanel>
               <ActionPanel.Section title={item.title}>
-                <Action.Push
-                  title="Oped Feed"
-                  target={<StoriesList feeds={[item]} />}
-                  icon={{ source: Icon.BlankDocument, tintColor: Color.Green }}
-                />
+                <Action.Push title="Search Stories" target={<StoriesList feeds={[item]} />} icon={Icon.AppWindowList} />
+                {item.link && <Action.OpenInBrowser url={item.link} />}
               </ActionPanel.Section>
               <ActionPanel.Section>
                 <Action.Push
