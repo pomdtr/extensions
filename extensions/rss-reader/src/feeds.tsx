@@ -1,4 +1,16 @@
-import { ActionPanel, List, showToast, Icon, Color, Action, LocalStorage, Toast, Image } from "@raycast/api";
+import {
+  ActionPanel,
+  List,
+  showToast,
+  Icon,
+  Color,
+  Action,
+  LocalStorage,
+  Toast,
+  Image,
+  confirmAlert,
+  Alert,
+} from "@raycast/api";
 import { usePromise } from "@raycast/utils";
 import { StoriesList } from "./stories";
 import AddFeedForm from "./subscription-form";
@@ -59,19 +71,30 @@ function FeedsList() {
           actions={
             <ActionPanel>
               <ActionPanel.Section title={item.title}>
-                <Action.Push title="Search Stories" target={<StoriesList feeds={[item]} />} icon={Icon.AppWindowList} />
+                <Action.Push title="View Stories" target={<StoriesList feeds={[item]} />} icon={Icon.AppWindowList} />
                 {item.link && <Action.OpenInBrowser url={item.link} />}
               </ActionPanel.Section>
               <ActionPanel.Section>
                 <Action.Push
                   title="Add Feed"
                   target={<AddFeedForm />}
-                  icon={{ source: Icon.Plus, tintColor: Color.Green }}
+                  icon={Icon.Plus}
                   shortcut={{ modifiers: ["cmd"], key: "n" }}
                 />
                 <Action
                   title="Remove Feed"
-                  onAction={() => removeFeed(index)}
+                  onAction={async () => {
+                    confirmAlert({
+                      title: "Delete Feed?",
+                      message: `Warning: This operation cannot be undone.`,
+                      icon: Icon.Trash,
+                      primaryAction: {
+                        title: "Delete",
+                        onAction: () => removeFeed(index),
+                        style: Alert.ActionStyle.Destructive,
+                      },
+                    });
+                  }}
                   icon={{ source: Icon.Trash, tintColor: Color.Red }}
                   shortcut={{ modifiers: ["cmd", "shift"], key: "d" }}
                 />

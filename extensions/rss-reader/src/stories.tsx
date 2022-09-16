@@ -7,6 +7,7 @@ import en from "javascript-time-ago/locale/en.json";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import { nanoid } from "nanoid";
 import { usePromise } from "@raycast/utils";
+import React from "react";
 
 const parser = new Parser({});
 
@@ -126,32 +127,49 @@ export function StoriesList(props: { feeds?: Feed[] }) {
     }
 
     if (feeds.length === 0) {
-      return;
+      return { feeds: [], stories: [] };
     }
 
-    return getStories(feeds);
+    return { feeds, stories: await getStories(feeds) };
   }
-  const { data: stories, isLoading, revalidate } = usePromise(fetchStories, [props.feeds]);
+  const { data, isLoading, revalidate } = usePromise(fetchStories, [props.feeds]);
+  const [filter, setFilter] = React.useState("all");
 
   return (
     <List
       isLoading={isLoading}
+      searchBarAccessory={
+        data?.feeds.length && data.feeds.length > 1 ? (
+          <List.Dropdown onChange={setFilter} tooltip="Subscription">
+            <List.Dropdown.Section>
+              <List.Dropdown.Item icon={Icon.Globe} title="All Subscription" value="all" />
+            </List.Dropdown.Section>
+            <List.Dropdown.Section>
+              {data?.feeds.map((feed) => (
+                <List.Dropdown.Item key={feed.url} icon={feed.icon} title={feed.title} value={feed.url} />
+              ))}
+            </List.Dropdown.Section>
+          </List.Dropdown>
+        ) : null
+      }
       actions={
         !props?.feeds && (
           <ActionPanel>
             <Action.Push
               title="Add Feed"
               target={<AddFeedForm />}
-              icon={{ source: Icon.Plus, tintColor: Color.Green }}
+              icon={Icon.Plus}
               shortcut={{ modifiers: ["cmd"], key: "n" }}
             />
           </ActionPanel>
         )
       }
     >
-      {stories?.map((story) => (
-        <StoryListItem key={story.guid} item={story} refresh={revalidate} />
-      ))}
+      {data?.stories
+        .filter((story) => filter === "all" || story.fromFeed === filter)
+        .map((story) => (
+          <StoryListItem key={story.guid} item={story} refresh={revalidate} />
+        ))}
     </List>
   );
 }
