@@ -4,7 +4,6 @@ import AddFeedForm from "./subscription-form";
 import Parser from "rss-parser";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en.json";
-import { useEffect, useState } from "react";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import { nanoid } from "nanoid";
 import { usePromise } from "@raycast/utils";
@@ -121,14 +120,18 @@ async function getStories(feeds: Feed[]) {
 }
 
 export function StoriesList(props: { feeds?: Feed[] }) {
-  async function fetchStories() {
-    const feeds = await getFeeds();
+  async function fetchStories(feeds?: Feed[]) {
+    if (typeof feeds == "undefined") {
+      feeds = await getFeeds();
+    }
+
     if (feeds.length === 0) {
       return;
     }
+
     return getStories(feeds);
   }
-  const { data: stories, isLoading, revalidate } = usePromise(fetchStories);
+  const { data: stories, isLoading, revalidate } = usePromise(fetchStories, [props.feeds]);
 
   return (
     <List
