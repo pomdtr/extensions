@@ -1,18 +1,20 @@
-import { ActionPanel, Color, Icon, List, randomId, showToast, Action, Image, LocalStorage, Toast } from "@raycast/api";
+import { ActionPanel, Color, Icon, List, showToast, Action, Image, LocalStorage, Toast, Detail } from "@raycast/api";
 import { Feed, getFeeds } from "./feeds";
 import AddFeedForm from "./subscription-form";
 import Parser from "rss-parser";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en.json";
 import { useEffect, useState } from "react";
-import { getFavicon } from "@raycast/utils";
+import { NodeHtmlMarkdown } from "node-html-markdown";
 
 const parser = new Parser({});
 
 interface Story {
   guid: string;
   title: string;
+  subtitle: string;
   link?: string;
+  content?: string;
   icon: Image.ImageLike;
   isNew: boolean;
   date: number;
@@ -29,9 +31,16 @@ const timeAgo = new TimeAgo("en-US");
 function StoryListItem(props: { item: Story }) {
   return (
     <List.Item
-      title={props.item.title}
       icon={props.item.icon}
-      actions={<Actions item={props.item} />}
+      title={props.item.title}
+      subtitle={props.item.subtitle}
+      actions={
+        <ActionPanel>
+          <OpenStory item={props.item} />
+          <ReadStory item={props.item} />
+          <CopyStory item={props.item} />
+        </ActionPanel>
+      }
       accessories={[
         {
           text: timeAgo.format(props.item.date) as string,
@@ -42,29 +51,30 @@ function StoryListItem(props: { item: Story }) {
   );
 }
 
-function Actions(props: { item: Story }) {
-  return (
-    <ActionPanel title={props.item.title}>
-      <ActionPanel.Section>{props.item.link && <Action.OpenInBrowser url={props.item.link} />}</ActionPanel.Section>
-      <ActionPanel.Section>
-        {props.item.link && (
-          <Action.CopyToClipboard
-            content={props.item.link}
-            title="Copy Link"
-            shortcut={{ modifiers: ["cmd"], key: "." }}
-          />
-        )}
-      </ActionPanel.Section>
-    </ActionPanel>
-  );
+function ReadStory(props: { item: Story }) {
+  return props.item.content ? (
+    <Action.Push icon={Icon.Book} title="Read Story" target={<StoryDetail item={props.item} />} />
+  ) : null;
+}
+
+function OpenStory(props: { item: Story }) {
+  return props.item.link ? <Action.OpenInBrowser url={props.item.link} /> : null;
+}
+
+function CopyStory(props: { item: Story }) {
+  return props.item.link ? (
+    <Action.CopyToClipboard content={props.item.link} title="Copy Link" shortcut={{ modifiers: ["cmd"], key: "." }} />
+  ) : null;
 }
 
 function ItemToStory(item: Parser.Item, feed: Feed, lastViewed: number) {
   const date = item.pubDate ? Date.parse(item.pubDate) : 0;
   return {
-    guid: item.guid || randomId(),
+    guid: item.guid,
     title: item.title || "No title",
+    subtitle: feed.title,
     link: item.link,
+    content: item.content,
     isNew: date > lastViewed,
     date,
     icon: feed.icon,
@@ -153,6 +163,20 @@ export function StoriesList(props: { feeds?: Feed[] }) {
         <StoryListItem key={story.guid} item={story} />
       ))}
     </List>
+  );
+}
+
+function StoryDetail(props: { item: Story }) {
+  return (
+    <Detail
+      markdown={NodeHtmlMarkdown.translate(props.item.content || "")}
+      actions={
+        <ActionPanel>
+          <OpenStory item={props.item} />
+          <CopyStory item={props.item} />
+        </ActionPanel>
+      }
+    />
   );
 }
 
